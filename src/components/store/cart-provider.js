@@ -8,8 +8,53 @@ const defaultCartState = {
 
 const cartReducer = (state,action) => {
     if(action.type === 'ADD_ITEM') {
-        const updatedItems = state.items.concat(action.val);
         const updatedTotalAmount = state.totalAmount + (action.val.price * action.val.amount);
+        
+        const existingCartIndex = state.items.findIndex((item) => {
+            return item.id === action.val.id;
+        })
+
+        const existingCartItem = state.items[existingCartIndex];
+        let updatedItem;
+        let updatedItems;
+
+        if(existingCartItem) {
+            updatedItem = {
+                ...existingCartItem,
+                amount: existingCartItem.amount + action.val.amount
+            }
+            updatedItems = [...state.items];
+            updatedItems[existingCartIndex] = updatedItem;
+        } else {
+            updatedItem = {
+                ...action.item
+            };
+            updatedItems = state.items.concat(action.val);
+        }
+        
+        return {
+            items: updatedItems,
+            totalAmount: updatedTotalAmount
+        }
+    }
+    if(action.type === 'REMOVE_ITEM') {
+        
+
+        const existingCartIndex = state.items.findIndex((item) => {
+            return item.id === action.id;
+        })
+        const existingCartItem = state.items[existingCartIndex];
+        const updatedTotalAmount = state.totalAmount - existingCartItem.price;
+        let updatedItems;
+        if(existingCartItem.amount === 1) {
+            updatedItems = state.items.filter(item => {
+            return item.id !== action.id
+            })
+        } else {
+            const updatedItem = {...existingCartItem,amount: existingCartItem.amount - 1};
+            updatedItems =  [...state.items];
+            updatedItems[existingCartIndex] = updatedItem;
+        }
         return {
             items: updatedItems,
             totalAmount: updatedTotalAmount
@@ -32,7 +77,7 @@ const CartProvider = props => {
     const removeCartHandler = id => {
         dispatchCartAction({
             type:'REMOVE_ITEM',
-            val:id
+            id:id
         })
     }
     const cartContext = {
